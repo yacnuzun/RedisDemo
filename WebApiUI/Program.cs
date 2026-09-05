@@ -1,6 +1,9 @@
 
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
+using System.Text.Json.Serialization;
+using WebApiUI.Modules.Invoices.Application;
+using WebApiUI.Shared.Caching;
 using WebApiUI.Shared.Persistence;
 
 namespace WebApiUI
@@ -13,7 +16,11 @@ namespace WebApiUI
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
             builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
@@ -21,6 +28,8 @@ namespace WebApiUI
             builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
                 ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis")!));
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            builder.Services.AddScoped<ICacheService, RedisCacheService>();
+            builder.Services.AddScoped<IInvoiceService, InvoiceService>();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
